@@ -1,0 +1,94 @@
+﻿@using System;
+@using Lcps.Infrastructure;
+@using Lcps.DivisionDirectory.Scopes;
+@using Lcps.UI.Context;
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ContextManager cm = new ContextManager();
+}
+
+<style>
+    .scope-item ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+    }
+
+        .scope-item ul li {
+            margin-bottom: 8px;
+        }
+</style>
+
+<div class="container body-content">
+    <div class="container">
+        <h3>Membership Scopes</h3>
+
+        <p>
+            <a href="@Url.Action("Create", "Scopes", new { area = "Directory"})" class="btn btn-success"><i class="fa fa-plus"></i> Create Scope</a>
+        </p>
+    </div>
+
+    @{
+        int col = 0;
+
+        foreach (string s in System.Enum.GetNames(typeof(MembershipScopeQualifier)))
+        {
+            MembershipScopeQualifier q = (MembershipScopeQualifier)System.Enum.Parse(typeof(MembershipScopeQualifier), s);
+            if (q != MembershipScopeQualifier.None)
+            {
+                <div class="col-md-4 scope-item">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            @q.ToString()
+                        </div>
+                        <div class="panel-body">
+                            <ul>
+                                @{
+                if (q == MembershipScopeQualifier.Reserved)
+                {
+                    foreach (string n in System.Enum.GetNames(typeof(MembershipScopeReserved)))
+                    {
+                        <li>
+                            @n
+                        <small>
+                            <span style="margin-left:14px;" class="text-info">@Convert.ToUInt32(Enum.Parse(typeof(MembershipScopeReserved), n)).ToString()</span>
+</small>
+                    </li>
+                    }
+                }
+                else
+                {
+
+                    List<MembershipScope> scopes = cm.DirectoryContext.MembershipScopes.Get(x => x.ScopeQualifier == q).ToList();
+                    foreach (MembershipScope scope in scopes.OrderBy(x => x.Caption).ToArray())
+                    {
+                        <li>
+                            <a href="@Url.Action("Edit", "Scopes", new { area = "Directory", id = scope.MembershipScopeId })" class="btn btn-xs btn-lnk" title="Edit scope details"><i class="fa fa-pencil"></i></a> @scope.Caption <small><span style="margin-left:14px;" class="text-info">@scope.BinaryValue</span></small>
+                            @if (scope.BinaryValue < cm.DirectoryContext.MembershipScopes.DynamicScopeMinValue())
+                            {
+                                <span class="text-danger">Reserved</span>
+                            }
+                        </li>
+                    }
+                }
+                                }
+                            </ul>
+
+                        </div>
+                    </div>
+                </div>
+                col++;
+                if (col > 2)
+                {
+
+                    <div class="row">
+                    </div>
+                    col = 0;
+                }
+
+            }
+        }
+    }
+</div>

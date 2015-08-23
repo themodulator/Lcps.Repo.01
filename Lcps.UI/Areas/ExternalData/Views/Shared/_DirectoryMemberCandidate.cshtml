@@ -1,0 +1,23 @@
+﻿@using Lcps.DivisionDirectory.ExternalData;
+@using Lcps.DivisionDirectory.Members;
+@using Lcps.DivisionDirectory.Scopes;
+
+@model NwUserCandidate
+
+
+<div class="panel panel-@Model.BootStrapStatus">
+    <div class="panel-heading">
+        Candidate Info
+    </div>
+    <div class="panel-body">
+        <div class="form-horizontal">
+            <div class="form-group">
+                @Html.LabelFor(x => x.ExistsInDirectory, new { @class = "control-label col-md-2" } )
+                <div class="col-md-10">
+                    @Html.DisplayFor(x => x.ExistsInDirectory, new { @class = "form-control-static" } )
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

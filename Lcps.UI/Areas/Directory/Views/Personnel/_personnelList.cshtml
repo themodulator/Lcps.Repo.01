@@ -1,0 +1,43 @@
+﻿@using Lcps.DivisionDirectory.ExternalData;
+@using PagedList;
+@using PagedList.Mvc;
+
+@model PagedList<Personnel>
+
+<div class="table-responsive">
+    <table class="table table-condensed table-striped table-hover lcps-dt">
+        <tr>
+            <th>@Html.DisplayNameFor(model => Model.First().SSN)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().Last_Name)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().First_Name)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().Middle_Name)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().Sex)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().DOB)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().Location1)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().Position)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().Assignment)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().Active)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().PartTime)</th>
+            <th>@Html.DisplayNameFor(model => Model.First().Employment_Date)</th>
+        </tr>
+
+        @foreach (Personnel s in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(model => s.SSN)</td>
+                <td>@Html.DisplayFor(model => s.Last_Name)</td>
+                <td>@Html.DisplayFor(model => s.First_Name)</td>
+                <td>@Html.DisplayFor(model => s.Middle_Name)</td>
+                <td>@Html.DisplayFor(model => s.Sex)</td>
+                <td>@Html.DisplayFor(model => s.DOB)</td>
+                <td>@Html.DisplayFor(model => s.Location1)</td>
+                <td>@Html.DisplayFor(model => s.Position)</td>
+                <td>@Html.DisplayFor(model => s.Assignment)</td>
+                <td>@Html.DisplayFor(model => s.Active)</td>
+                <td>@Html.DisplayFor(model => s.PartTime)</td>
+                <td>@Html.DisplayFor(model => s.Employment_Date)</td>
+            </tr>
+        }
+
+    </table>
+</div>

@@ -1,0 +1,401 @@
+﻿@using System.DirectoryServices;
+@using System.DirectoryServices.AccountManagement;
+@using Lcps.DivisionDirectory.Ldap;
+@using Lcps.DivisionDirectory.Members;
+@using Lcps.UI.Context;
+
+@using System.Security;
+@using System.Security.Principal;
+@using System.Security.AccessControl;
+
+@{
+    ViewBag.Title = "MemberList";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    string strId = Request["memberId"];
+    Guid memberId = (strId == null) ? Guid.Empty : new Guid(strId);
+    LdapUserConfig userConfig = null;
+
+    ContextManager cm = new ContextManager();
+
+    string f = Request["filter"];
+    long filter = (f == null) ? 0 : Convert.ToInt64(f);
+    string search = Request["search"];
+    string activeTab = Request["tab"];
+
+
+}
+
+<script>
+    $('document').ready(function () {
+
+        var tab = $('#activeTab').val();
+
+        if (tab != null)
+            $('.nav-tabs a[href="#' + tab + '"]').tab('show');
+    })
+
+    function selectMember(id) {
+        var filter = $('#filter').val();
+
+        var search = $('#search').val();
+
+        var url = '/Ldap/UserSync/MemberList/?filter=' + filter + '&search=' + search + '&memberId=' + id;
+
+        process('/Ldap/UserSync/MemberList', 'Searching for user', { filter: filter, search: search, memberId: id },
+            function () { refresh(id, 'personalFolders') });
+
+        window.location.href = url;
+    }
+
+    function syncGroups(id) {
+        process('/Ldap/UserSync/SyncGroups', 'Syncing group memberships', { id: id },
+            function () {
+                refresh(id, "groupAssignment");
+            }
+            );
+    }
+
+    function renameFolder(id, currentName, format) {
+        process('/Ldap/UserSync/RenameFolder', 'Renaming folder', { currentName: currentName, memberId: id, format: format },
+            function () {
+                refresh(id, "personalFolders");
+            }
+            );
+    }
+
+    function assignRights(id, currentName, format) {
+        process('/Ldap/UserSync/AssignRights', 'Assigning rights to folder', { currentName: currentName, memberId: id },
+            function () {
+                refresh(id, "personalFolders");
+            }
+            );
+    }
+
+    function createFolder(id, currentName) {
+        process('/Ldap/UserSync/AssignRights', 'Creating folder', { currentName: currentName, memberId: id },
+            function () {
+                refresh(id, "personalFolders");
+            }
+            );
+    }
+
+    function CreateLdapAccount(id) {
+        process('/Ldap/UserSync/CreateAccount', 'Creating LDAP account', { memberId: id },
+            function () {
+                refresh(id, "personalFolders");
+            }
+            );
+    }
+
+    function refresh(id, tab) {
+        var filter = $('#filter').val();
+
+        var search = $('#search').val();
+
+        var url = '/Ldap/UserSync/MemberList/?filter=' + filter + '&search=' + search + '&memberId=' + id + '&tab=' + tab;
+
+        window.location.href = url;
+    }
+
+    function process(url, message, data, callback) {
+        $('#statusMessage').html(message + '...');
+
+        $('#progressModal').modal('show');
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            data: data,
+            success: function (data, success) {
+                $('#progressModal').modal('hide');
+                if (data.match('^<ul>')) {
+                    $('#errMsg').html(data);
+                    $('#errDiv').toggle('slow');
+                }
+                else {
+                    callback();
+                }
+
+
+            },
+            error: function (data, error) {
+                $('#progressModal').modal('hide');
+                $('#errMsg').html(data);
+                $('#errDiv').toggle('slow');
+
+            }
+        });
+    }
+</script>
+
+
+<div id="progressModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Processing</h4>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <tr>
+                        <td style="padding-right:24px;">
+                            <img src="~/Content/images/ajax-loader.gif" />
+                        </td>
+                        <td>
+                            <p id="statusMessage">Processing...</p>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+
+
+<div class="body-content">
+    <h2>LDAP Members</h2>
+
+    <input type="hidden" id="search" value="@search" />
+    <input type="hidden" id="filter" value="@filter" />
+    <input type="hidden" id="activeTab" value="@activeTab" />
+
+    <div class="row">
+        <div class="col-md-4">
+            @Html.Partial("~/Areas/Directory/Views/Members/_memberBrowserList.cshtml")
+        </div>
+
+        <div class="col-md-8">
+            <div id="errDiv" class="alert alert-danger alert-dismissible" role="alert" style="display: none;">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <strong>Error!</strong> <br />
+                <div id="errMsg">
+
+                </div>
+            </div>
+
+            @{
+                try
+                {
+                    if (!memberId.Equals(Guid.Empty))
+                    {
+                        userConfig = new LdapUserConfig(strId, new Lcps.UI.Models.LcpsUiContext());
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Anvil.ExceptionCollector ec = new Anvil.ExceptionCollector(ex);
+                    <div class="alert alert-danger">
+                        <strong>Error!</strong><br />
+                        @Html.Raw( ec.ToUL())
+                    </div>
+                }
+            }
+
+
+            @if (!memberId.Equals(Guid.Empty) && userConfig != null)
+            {
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        Directory Member Details
+                    </div>
+                    <div class="panel-body">
+                        <strong>@userConfig.Member.FullSortName</strong> &nbsp; &nbsp; <small>@userConfig.Member.UserName</small> <br />
+                        @cm.DirectoryContext.MembershipScopes.GetCaptionLabel(userConfig.Member.MembershipScope)<br />
+                        <strong>Title:</strong> @userConfig.Member.Title
+
+                        @if (!userConfig.ExistsInLdap)
+                        {
+                            <p><button type="button" class="btn btn-success" onclick="CreateLdapAccount('@memberId');"><i class="fa fa-plus"></i> Create LDAP Account</button></p>
+                        }
+                        else
+                        {
+                            <p class="text-info">
+                                <small>@userConfig.LdapUser.DistinguishedName</small>
+                            </p>
+                        }
+                    </div>
+                </div>
+
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#personalFolders">Personal Folders</a></li>
+                    <li><a data-toggle="tab" href="#ouAssignment">OU Assignment</a></li>
+                    <li><a data-toggle="tab" href="#groupAssignment">Group Assignments</a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div id="personalFolders" class="tab-pane fade in active">
+                        <h3>Personal Folders</h3>
+                        <table class="lcps-comp-tbl">
+                            <tr>
+                                <th>Folder</th>
+                                <th>Commands</th>
+                            </tr>
+                            @foreach (PersonalFolder pfr in userConfig.PersonalFolders)
+                            {
+                                {
+                                    string name = DirectoryMemberRepository.GetName(userConfig.Member, DirectoryMemberNameFormats.Short | DirectoryMemberNameFormats.Sort);
+
+                                    string fPath = LdapUserConfig.GetFolderPath(userConfig.Member, pfr);
+                                    string fPathForm = fPath.Replace("\\", "\\\\");
+
+                                    if (!Directory.Exists(fPath))
+                                    {
+                                        <tr>
+                                            <td>@fPath</td>
+                                            <td>
+                                                @if (userConfig.ExistsInLdap)
+                                                {
+                                                    <button type="button" onclick="createFolder('@memberId', '@fPathForm', '@pfr.NameFormat'); " class="btn btn-xs btn-warning"> Create</button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+
+
+
+                                    DirectoryInfo dr = new DirectoryInfo(pfr.FolderPath);
+                                    foreach (DirectoryInfo pf in dr.GetDirectories()
+                                        .Where(x => x.Name.StartsWith(name)
+                                            | x.Name.StartsWith(userConfig.Member.UserName)))
+                                    {
+                                        <tr>
+                                            <td>
+                                                @pf.FullName<br />
+                                                <ul>
+                                                    @{
+                                        DirectorySecurity dSecurity = pf.GetAccessControl();
+                                        bool hasAccess = false;
+                                        foreach (AuthorizationRule r in dSecurity.GetAccessRules(true, false, typeof(System.Security.Principal.NTAccount)))
+                                        {
+                                            string iName = r.IdentityReference.Value.ToLower();
+                                            if (iName.EndsWith("\\" + userConfig.Member.UserName.ToLower()))
+                                            {
+                                                hasAccess = true;
+                                            }
+
+                                            <li><small>@r.IdentityReference.Value</small> </li>
+                                        }
+                                                    }
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                @if (userConfig.ExistsInLdap)
+                                                {
+                                                    string fName = LdapUserConfig.FormatFolderName(userConfig.Member, pfr);
+                                                    string fNameForm = pf.FullName.Replace("\\", "\\\\");
+                                                    if (!hasAccess)
+                                                    {
+                                                        <div style="margin-bottom: 3px;">
+                                                            <button type="button" onclick="assignRights('@memberId', '@fNameForm', '@pfr.NameFormat');" class="btn btn-xs btn-warning"> Grant Access</button>
+                                                        </div>
+                                                    }
+                                                    if (pfr.NameFormat == PersonalFolderIdFormats.Fullname & pf.Name != fName)
+                                                    {
+                                                        <div>
+                                                            <button type="button" onclick="renameFolder('@memberId', '@fNameForm', '@pfr.NameFormat');" class="btn btn-xs btn-warning"> Rename</button><span>To:</span> @fName
+                                                        </div>
+                                                    }
+                                                }
+                                            </td>
+                                        </tr>
+
+                                    }
+                                }
+                            }
+                        </table>
+                    </div>
+                    <div id="ouAssignment" class="tab-pane fade">
+                        <h3>OU Assignment</h3>
+                        <table class="lcps-comp-tbl">
+                            <tr>
+                                <th>Current</th>
+                                <th>Intended</th>
+                            </tr>
+                            <tr>
+                                <td>
+                                    @if (userConfig.ExistsInLdap)
+                                    {
+                                        string ou = ((DirectoryEntry)userConfig.LdapUser.GetUnderlyingObject()).Parent.InvokeGet("distinguishedName").ToString();
+                                        <span>@ou</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (userConfig != null)
+                                    {
+                                        if (userConfig.OuAssignment != null)
+                                        {
+                                            if (userConfig.OuAssignment.OuDistinguishedName != null)
+                                            {
+                                                @userConfig.OuAssignment.OuDistinguishedName
+                                            }
+                                        }
+                                    }
+
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="groupAssignment" class="tab-pane fade">
+                        <h3>Group Assignments</h3>
+                        @if (userConfig.ExistsInLdap)
+                        {
+                            <p><button type="button" class="btn btn-info btn-xs" onclick="syncGroups('@userConfig.Member.Id');"><i class="fa fa-refresh"></i> Sync</button></p>
+                        }
+                        <table class="lcps-comp-tbl">
+                            <tr>
+                                <th>Current</th>
+                                <th>Intended</th>
+                            </tr>
+                            <tr>
+                                <td>
+                                    @if (userConfig.ExistsInLdap)
+                                    {
+
+
+                                        try
+                                        {
+                                            foreach (GroupPrincipal grp in userConfig.LdapUser.GetGroups().OrderBy(g => g.DistinguishedName))
+                                            {
+                                                if (!grp.Name.ToLower().Equals("domain users"))
+                                                {
+                                                    <div>@( (new DirectoryEntry("LDAP://" + grp.DistinguishedName).InvokeGet("samAccountName").ToString()))</div>
+                                                }
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Anvil.ExceptionCollector ec = new Anvil.ExceptionCollector(ex);
+                                            <div class="alert alert-danger">
+                                                @Html.Raw(ec.ToUL())
+                                            </div>
+                                        }
+                                    }
+
+                                </td>
+                                <td>
+                                    @foreach (GroupAssignment g in userConfig.GroupAssignments.OrderBy(g => g.GroupDN))
+                                    {
+                                        <div>@( (new DirectoryEntry("LDAP://" + g.GroupDN).InvokeGet("samAccountName").ToString()))</div>
+                                    }
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                </div>
+            }
+        </div>
+    </div>
+
+</div>

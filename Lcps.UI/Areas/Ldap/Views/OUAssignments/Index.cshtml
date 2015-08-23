@@ -1,0 +1,47 @@
+﻿
+@using Lcps.DivisionDirectory.Members;
+@using Lcps.DivisionDirectory.Ldap;
+@using PagedList;
+@using PagedList.Mvc;
+@using Lcps.UI.Context;
+
+@model PagedList<OuAssignment> 
+
+
+@{
+    ViewBag.Title = "OU Assignments";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ContextManager cm = new ContextManager();
+}
+
+<div class="body-content container">
+
+    <h2>OU Assignments</h2>
+
+    @Html.PagedListPager(Model, page => Url.Action("Index", new { page }))
+
+    <div class="table-responsive">
+        <table class="table table-hover table-striped table-condensed lcps-dt">
+            <tr>
+                <th><a href="@Url.Action("Create", "OUAssignments", new { area = "Ldap"})" class="btn btn-success btn-xs"><i class="fa fa-plus"></i> New</a></th>
+                <th>@Html.DisplayNameFor(model => model.First().MembershipScope)</th>
+                <th>@Html.DisplayNameFor(model => model.First().OuDistinguishedName)</th>
+            </tr>
+            @foreach(OuAssignment ou in Model)
+            {
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>
+                        @cm.DirectoryContext.MembershipScopes.GetCaptionLabel(ou.MembershipScope)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(model => ou.OuDistinguishedName)
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+
+
+
+</div>

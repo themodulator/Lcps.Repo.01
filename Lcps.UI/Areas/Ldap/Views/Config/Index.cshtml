@@ -1,0 +1,64 @@
+﻿@using Lcps.DivisionDirectory.Ldap;
+@model LdapConfig
+
+
+@{
+    ViewBag.Title = "LDAP";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+}
+
+<div class="body-content container">
+
+    <h3>Domain Configuration</h3>
+
+    @if (ViewBag.Result != null)
+    {
+        if (ViewBag.Result.ToString() == "ok")
+        {
+            <div class="alert alert-success alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                The domain info was successfully updated.
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                @Html.Raw(ViewBag.Result)
+            </div>
+        }
+    }
+
+    @using (Html.BeginForm("Update", "Config", new { area = "Ldap" }, FormMethod.Post))
+    {
+        <div class="form-horizontal">
+            <div class="form-group">
+                @Html.LabelFor(x => x.DomainPrincipalName, new { @class = "control-label col-md-2" })
+
+                <div class="col-md-4">
+                    @Html.TextBoxFor(x => x.DomainPrincipalName, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(x => x.UserName, new { @class = "control-label col-md-2" })
+
+                <div class="col-md-4">
+                    @Html.TextBoxFor(x => x.UserName, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(x => x.Password, new { @class = "control-label col-md-2" })
+
+                <div class="col-md-4">
+                    @Html.TextBoxFor(x => x.Password, new { @class = "form-control", type = "password" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Create</button>
+            </div>
+        </div>
+    }
+
+</div>

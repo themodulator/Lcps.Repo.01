@@ -1,0 +1,230 @@
+﻿@using Lcps.DivisionDirectory.Ldap;
+@using Lcps.DivisionDirectory.Scopes;
+@using Lcps.UI.Context;
+@using PagedList;
+@using PagedList.Mvc;
+
+@model PagedList<GroupAssignmentConfig>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ContextManager cm = new ContextManager();
+    ViewBag.Page = Request["page"];
+    System.Type eType = cm.DirectoryContext.MembershipScopes.ScopeEnumType;
+    string scopeStr = Request["scope"];
+    long scope = string.IsNullOrWhiteSpace(scopeStr) ? 0L : Convert.ToInt64(scopeStr);
+}
+
+
+<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.0/css/bootstrap-toggle.min.css" rel="stylesheet">
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.0/js/bootstrap-toggle.min.js"></script>
+
+
+<script>
+    $(function () {
+        $('.cb-scope').bootstrapToggle();
+    });
+
+
+    function filterConfigs(page) {
+        var total = 0;
+
+        $('.cb-scope').each(
+             function () {
+                 var id = $(this).attr('id');
+                 var val = parseInt(id.replace('cb-', ''));
+                 var ckd = $(this).prop('checked');
+
+                 if (ckd) {
+                     total += val;
+                 }
+             }
+         );
+
+        var url = "/Ldap/Groups/?page=" + page;
+
+        if (total != 0)
+            url += "&scope=" + total;
+
+        window.location.href = url;
+    }
+
+
+    function addGroup(id, page, scope) {
+        var grp = $('#tb-' + id).val();
+
+        $('#' + id).modal('hide');
+
+
+        $.ajax({
+            type: 'GET',
+            url: '/Ldap/Groups/AddAssignment',
+            data: { configId: id, groupDn: grp },
+            success: function (data, success) {
+                if (data.match('^<ul>')) {
+                    $('#errMsg').html(data);
+                    $('#errDiv').toggle('slow');
+                }
+                else {
+                    var url = "/Ldap/Groups/?page=" + page + '&scope=' + scope;
+                    window.location.href = url;
+                }
+            },
+            error: function (data, error) {
+                alert(data.statusText);
+                $('#errMsg').html(data);
+                $('#errDiv').toggle('slow');
+            }
+        });
+
+    }
+
+    function removeGroup(id, page) {
+
+        if (!confirm('Are you sure you want to remove this group?'))
+            return;
+
+        $.ajax({
+            type: 'GET',
+            url: '/Ldap/Groups/RemoveAssignment',
+            data: { id: id },
+            success: function (data, success) {
+                if (data.match('^<ul>')) {
+                    $('#errMsg').html(data);
+                    $('#errDiv').toggle('slow');
+                }
+                else {
+                    var url = "/Ldap/Groups/Index?page=" + page;
+                    window.location.href = url;
+                }
+            },
+            error: function (data, error) {
+                $('#errMsg').html(data);
+                $('#errDiv').toggle('slow');
+            }
+        });
+
+
+    }
+
+    function editConfig(id) {
+        var url = "/Ldap/Groups/Create?id=" + id;
+        window.location.href = url;
+    }
+</script>
+
+<div class="body-content container">
+
+    <h2>Group Assignments</h2>
+
+    <div id="errDiv" class="alert alert-danger alert-dismissible" role="alert" style="display: none;">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <div id="errMsg"></div>
+    </div>
+
+    <p>
+        <a href="@Url.Action("Create", "Groups", new { area = "Ldap", scope = @scope})" class="btn btn-success"><i class="fa fa-plus"></i> Create New</a>
+    </p>
+
+    <div class="alert alert-info">
+        @foreach (MembershipScope s in cm.DirectoryContext.MembershipScopes.Get(x => x.ScopeQualifier == MembershipScopeQualifier.Location))
+        {
+            Enum sv = (Enum)Enum.ToObject(eType, s.BinaryValue);
+            Enum mv = (Enum)Enum.ToObject(eType, scope);
+
+            <label class="checkbox-inline">
+                @if (scope > 0)
+                {
+                    if ((s.BinaryValue | scope) == s.BinaryValue )
+                    {
+                        <input id="cb-@s.BinaryValue.ToString()" onchange="filterConfigs('@ViewBag.Page');" type="checkbox" class="cb-scope" checked="checked" data-size="mini" data-toggle="toggle" />
+                    }
+                    else
+                    {
+                        <input id="cb-@s.BinaryValue.ToString()" onchange="filterConfigs('@ViewBag.Page');" type="checkbox" class="cb-scope" data-size="mini" data-toggle="toggle" />
+                    }
+                }
+                else
+                {
+                    <input id="cb-@s.BinaryValue.ToString()" onchange="filterConfigs('@ViewBag.Page');" type="checkbox" class="cb-scope" data-size="mini" data-toggle="toggle" />
+                }
+                @s.Caption
+            </label>
+        }
+
+
+    </div>
+
+    @if (Model != null)
+    {
+
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { page }))
+
+        <div class="table-responsive">
+            <table class="table table-condensed table-hover table-striped lcps-dt">
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Caption)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().MembershipScope)</th>
+                    <th>Assignments</th>
+                </tr>
+                @foreach (GroupAssignmentConfig cfg in Model)
+                {
+                    <tr>
+                        <td>
+                            <a href="@Url.Action("Delete", "Groups", new {area = "Ldap", id = cfg.GroupAssignmentKey})" class="btn btn-xs btn-danger" onclick="return confirm('Are you sure you want to delete this config and all of it\'s child assignments?');"><i class="fa fa-remove"></i></a>
+                            <button type="button" class="btn btn-xs btn-warning" onclick="editConfig('@cfg.GroupAssignmentKey')"><i class="fa fa-pencil"></i></button>
+                        </td>
+                        <td>@Html.DisplayFor(model => cfg.Caption)</td>
+                        <td>
+                            @cm.DirectoryContext.MembershipScopes.GetCaptionLabel(cfg.MembershipScope)
+                        </td>
+                        <td>
+
+                            @if (cfg.GroupAssignments != null && cfg.GroupAssignments.Count() > 0)
+                            {
+                                <button id="btn-@cfg.GroupAssignmentKey" class="btn btn-xs btn-default" type="button" data-toggle="modal" data-target="#@cfg.GroupAssignmentKey" style="margin-bottom: 4px;"><i class="fa fa-plus"></i> Add Group</button>
+                                <ul class="list-group">
+                                    <li class="list-group-item active">Groups</li>
+                                    @foreach (GroupAssignment g in cfg.GroupAssignments)
+                                    {
+                                        <li class="list-group-item"><small><a href="#" onclick="removeGroup('@g.GroupAssignmentKey', '@ViewBag.Page');"><i class="fa fa-remove"></i></a> &nbsp;&nbsp; @g.GroupDN</small></li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span class="text-info">This config has no groups assigned <small><button id="btn-@cfg.GroupAssignmentKey" class="btn btn-xs btn-default" type="button" data-toggle="modal" data-target="#@cfg.GroupAssignmentKey"><i class="fa fa-plus"></i> Add Group</button> </small> </span>
+                            }
+
+                            <div id="@cfg.GroupAssignmentKey" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+
+                                    <!-- Modal content-->
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Add Group DN</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="form-inline" style="margin-bottom: 24px;">
+                                                <label class="control-label">Group DN</label>
+                                                <input id="tb-@cfg.GroupAssignmentKey" type="text" class="form-control" />
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-success" onclick="addGroup('@cfg.GroupAssignmentKey', '@ViewBag.Page', '@ViewBag.Scope');"><i class="fa fa-plus"></i> Create</button>
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </table>
+
+        </div>
+    }
+</div>

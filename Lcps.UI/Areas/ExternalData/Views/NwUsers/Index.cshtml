@@ -1,0 +1,421 @@
+﻿@using System.Data.Linq;
+@using Lcps.DivisionDirectory.ExternalData;
+@using Lcps.DivisionDirectory.Members;
+@using Lcps.UI.Context;
+@using Lcps.UI.Models;
+@using System.Reflection;
+
+@model IEnumerable<NwUserCandidate>
+
+@{
+    ViewBag.Title = "NW Users";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ContextManager cm = new ContextManager();
+    string id = Request["memberId"];
+    string tab = Request["tab"];
+    string confine = Request["confine"];
+    string confineSession = (Session["confine"] == null) ? null : Session["confine"].ToString();
+    ExternalDataContext _external = new ExternalDataContext();
+    LcpsUiContext _lcpsDb = new LcpsUiContext();
+    string sessionSearch = (Session["search"] == null) ? null : Session["search"].ToString();
+    string search = Request["search"];
+    List<NwUserCandidate> candidates = (Session["candidates"] == null) ? new List<NwUserCandidate>() : (List<NwUserCandidate>)Session["candidates"];
+}
+
+<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.0/css/bootstrap-toggle.min.css" rel="stylesheet">
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.0/js/bootstrap-toggle.min.js"></script>
+
+
+<script>
+    $(function () {
+        $('.cb').bootstrapToggle(
+            {
+                off: 'No',
+                on: 'Yes'
+            }
+        );
+
+        var c = qs('confine');
+        $('#confine').val(c);
+        
+
+    })
+
+    function qs(key) {
+        key = key.replace(/[*+?^$.\[\]{}()|\\\/]/g, "\\$&"); // escape RegEx meta chars
+        var match = location.search.match(new RegExp("[?&]" + key + "=([^&]+)(&|$)"));
+        return match && decodeURIComponent(match[1].replace(/\+/g, " "));
+    }
+
+    function doSearch() {
+        var s = $('#search').val();
+
+        var url = '/ExternalData/NwUsers/Index?d=false';
+
+        if (s != null)
+            url += '&search=' + s;
+
+        var confine = $('#confine').val();
+        if (confine != null)
+            url += '&confine=' + confine;
+
+        window.location.href = url;
+    }
+
+    function getMember(id, search, tab, confine) {
+        var url = '/ExternalData/NwUsers/Index?d=false';
+
+        if (search != null)
+            url += '&search=' + search;
+
+        if (id != null)
+            url += '&memberId=' + id;
+
+        if (tab != null)
+            url += '&tab=' + tab;
+
+        if (confine != null)
+            url += '&confine=' + confine;
+
+        window.location.href = url;
+    }
+
+    function addToDirectory(key, value, tab, search, confine)
+    {
+        var url = '/ExternalData/NwUsers/AddToDirectory';
+        var data = { key: key, value: value };
+        process(url, "Adding candidate to directory", data, function () {
+            refresh(value, tab, search, confine);
+        })
+    }
+
+    function refresh(id, tab, search, confine) {
+        var filter = $('#filter').val();
+
+        var url = '/ExternalData/NwUsers/Index?d=false';
+
+        if (search == null)
+            url += '&search=' + search;
+
+        if (id != null)
+            url += '&memberId=' + id;
+
+        if (tab != null)
+            url += '&tab=' + tab;
+
+        if (confine != null)
+            url += '&confine=' + confine;
+
+        alert('refresh url ' + url);
+
+        window.location.href = url;
+    }
+
+    function process(url, message, data, callback) {
+        $('#statusMessage').html(message + '...');
+
+        $('#progressModal').modal('show');
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            data: data,
+            success: function (data, success) {
+                $('#progressModal').modal('hide');
+                if (data.match('^<ul>')) {
+                    $('#errMsg').html(data);
+                    $('#errDiv').toggle('slow');
+                }
+                else {
+                    callback();
+                }
+
+
+            },
+            error: function (data, error) {
+                $('#progressModal').modal('hide');
+                $('#errMsg').html(data);
+                $('#errDiv').toggle('slow');
+
+            }
+        });
+    }
+</script>
+
+
+
+<div id="progressModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Processing</h4>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <tr>
+                        <td style="padding-right:24px;">
+                            <img src="~/Content/images/ajax-loader.gif" />
+                        </td>
+                        <td>
+                            <p id="statusMessage">Processing...</p>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="body-content container">
+    <h3>NW Users</h3>
+
+    <div id="errDiv" class="alert alert-danger alert-dismissible" role="alert" style="display: none;">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <strong>Error!</strong> <br />
+        <div id="errMsg">
+
+        </div>
+    </div>
+
+
+    <!-- Search bar-->
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-addon">Search For</span>
+                <input id="search" type="text" class="form-control" placeholder="Search" name="srch-term" value="@search">
+                <div class="input-group-btn">
+                    <button type="button" onclick="doSearch();" class="btn btn-success"><i class="fa fa-search"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-addon">Directory Status</span>
+                <select id="confine" class="form-control">
+                    <option value="">Not Filtererd</option>
+                    <option value="True">In Directory</option>
+                    <option value="False">Not in Directory</option>
+                </select>
+                <div class="input-group-btn">
+                    <button type="button" onclick="doSearch();" class="btn btn-success"><i class="fa fa-search"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- End Search Bar-->
+    <!-- -------------------------- -->
+    <!-- -------------------------- -->
+    <!-- -------------------------- -->
+    <!-- Member List-->
+
+    <div class="col-md-5">
+        @if (sessionSearch != search)
+        {
+            candidates = _external.GetCandidates(_external.GetUsers(search), _lcpsDb);
+            Session["candidates"] = candidates;
+        }
+
+        @if (confine != confineSession)
+        {
+            if (confine == "True")
+            {
+                candidates = candidates.Where(x => x.ExistsInDirectory == true).ToList();
+            }
+
+            if (confine == "False")
+            {
+                candidates = candidates.Where(x => x.ExistsInDirectory == false & 
+                    x.ValidationErrors.Count() == 0 ).ToList();
+            }
+
+            Session["candidates"] = candidates;
+        }
+
+        <ul class="list-group" style="margin-top: 24px;">
+            <li class="list-group-item active">
+                <h4 class="list-group-item-heading">Candidates</h4>
+
+                <p class="list-group-item-text">
+                    <strong>Total:</strong> @candidates.Count().ToString()
+                </p>
+            </li>
+
+            @foreach (NwUserCandidate c in candidates)
+            {
+                <a href="#" onclick="getMember('@c.EntityID', '@search',  null, '@confine');" class="list-group-item list-group-item-@c.BootStrapStatus">
+                    <strong><small>@c.EntityID</small></strong>&nbsp;
+                    @c.FullSortName - <small>@c.UserName</small>
+                </a>
+            }
+        </ul>
+
+    </div>
+
+    <!-- End Member List-->
+    <!-- -------------------------- -->
+    <!-- -------------------------- -->
+    <!-- -------------------------- -->
+    <!-- Member Detail-->
+
+
+    <div class="col-md-7">
+        @if (id != null)
+        {
+            NWUser u = _external.NWUsers.FirstOrDefault(x => x.EntityID == id);
+
+            NwUserCandidate c = new NwUserCandidate(u);
+            <div class="panel panel-@c.BootStrapStatus" style="margin-top: 24px;">
+                <div class="panel-heading">
+                    Candidate Info
+                </div>
+                <div class="panel-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            @Html.LabelFor(x => c.FullSortName, new { @class = "control-label col-md-4" })
+                            <div class="col-md-8">
+                                @Html.TextBoxFor(x => c.FullSortName, new { @class = "form-control form-control-static", @disabled = "disabled" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(x => c.ExistsInDirectory, new { @class = "control-label col-md-4" })
+                            <div class="col-md-8">
+                                @Html.CheckBoxFor(x => c.ExistsInDirectory, new { @class = "cb", disabled = "disabled" })
+                                @if (c.IsStudent)
+                                {
+                                    if (!c.ExistsInDirectory)
+                                    {
+                                        <button class="btn btn-success" type="button" onclick="addToDirectory('EntityID', '@c.EntityID', '@tab', '@search', '@confine');">Create</button>
+                                    }
+                                    else
+                                    {
+                                        if (!c.ExistsInDirectory & c.ExistsInPersonnel)
+                                        {
+                                            <button class="btn btn-success" type="button" onclick="addToDirectory('SocSecNbrFormatted', '@c.SocSecNbrFormatted', '@tab', '@search', '@confine');">Create</button>
+                                        }
+                                    }
+
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(x => c.ExistsInPersonnel, new { @class = "control-label col-md-4" })
+                            <div class="col-md-8">
+                                @Html.CheckBoxFor(x => c.ExistsInPersonnel, new { @class = "cb", disabled = "disabled" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(x => c.IsStudent, new { @class = "control-label col-md-4" })
+                            <div class="col-md-8">
+                                @Html.CheckBoxFor(x => c.IsStudent, new { @class = "cb", disabled = "disabled" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @if (c.ValidationErrors.Count() > 0)
+                {
+                    <ul>
+                        @foreach (string v in c.ValidationErrors)
+                        {
+                            <li>@v</li>
+                        }
+                    </ul>
+                }
+            </div>
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#nwuser" aria-controls="home" role="tab" data-toggle="tab">NW User</a></li>
+                <li role="presentation"><a href="#personnel" aria-controls="profile" role="tab" data-toggle="tab">Personnel</a></li>
+                <li role="presentation"><a href="#directory" aria-controls="messages" role="tab" data-toggle="tab">Directory</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="nwuser" role="tabpanel">
+                    <div class="form-horizontal" style="margin-top: 24px;">
+
+                        @foreach (PropertyInfo pi in c.NWUser.GetType().GetProperties())
+                        {
+
+                            if (pi.CanWrite & pi.CanRead)
+                            {
+                                string v = (pi.GetValue(c.NWUser, null) == null) ? "" : pi.GetValue(c.NWUser, null).ToString();
+                                <div class="form-group">
+                                    <label class="control-label col-md-4">@pi.Name</label>
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" readonly value="@v" />
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="tab-pane" id="personnel" role="tabpanel">
+                    <div class="form-horizontal" style="margin-top: 24px;">
+
+                        @if (c.ExistsInPersonnel)
+                        {
+                            foreach (PropertyInfo pi in c.Personnel.GetType().GetProperties())
+                            {
+
+                                if (pi.CanWrite & pi.CanRead)
+                                {
+                                    string v = (pi.GetValue(c.Personnel, null) == null) ? "" : pi.GetValue(c.Personnel, null).ToString();
+                                    <div class="form-group">
+                                        <label class="control-label col-md-4">@pi.Name</label>
+                                        <div class="col-md-8">
+                                            <input type="text" class="form-control" readonly value="@v" />
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-danger">
+                                No data in personnel
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="tab-pane" id="directory" role="tabpanel">
+                    <div class="form-horizontal" style="margin-top: 24px;">
+
+                        @if (c.ExistsInDirectory)
+                        {
+                            foreach (PropertyInfo pi in typeof(IDirectoryMember).GetProperties())
+                            {
+
+                                if (pi.CanWrite & pi.CanRead)
+                                {
+                                    string v = (pi.GetValue(c.Member, null) == null) ? "" : pi.GetValue(c.Member, null).ToString();
+                                    <div class="form-group">
+                                        <label class="control-label col-md-4">@pi.Name</label>
+                                        <div class="col-md-8">
+                                            <input type="text" class="form-control" readonly value="@v" />
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-danger">
+                                No data in diretcory
+                            </div>
+
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>

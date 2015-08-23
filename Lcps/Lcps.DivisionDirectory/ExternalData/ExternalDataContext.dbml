@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="Lcps.v2015" EntityNamespace="Lcps.DivisionDirectory.ExternalData" ContextNamespace="Lcps.DivisionDirectory.ExternalData" Class="ExternalDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Connection Mode="AppSettings" ConnectionString="Data Source=.\sqlexpress;Initial Catalog=Lcps.v2015;User ID=Sa" SettingsObjectName="Lcps.DivisionDirectory.Properties.Settings" SettingsPropertyName="_connectionString" Provider="System.Data.SqlClient" />
+  <Table Name="ExternalData.Personnel" Member="Personnels">
+    <Type Name="Personnel" Id="ID1">
+      <Column Name="PersonnelKey" Type="System.Guid" DbType="UniqueIdentifier NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="SSN" Type="System.String" DbType="NVarChar(12)" CanBeNull="true" />
+      <Column Name="[Last Name]" Member="Last_Name" Type="System.String" DbType="NVarChar(30)" CanBeNull="true" />
+      <Column Name="[First Name]" Member="First_Name" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="[Middle Name]" Member="Middle_Name" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="DOB" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="Sex" Type="System.String" DbType="NVarChar(1)" CanBeNull="true" />
+      <Column Name="Location1" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="Position" Type="System.String" DbType="NVarChar(40)" CanBeNull="true" />
+      <Column Name="Assignment" Type="System.String" DbType="NVarChar(60)" CanBeNull="true" />
+      <Column Name="PartTime" Type="System.String" DbType="NVarChar(1)" CanBeNull="true" />
+      <Column Name="Active" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Column Name="[Employment Date]" Member="Employment_Date" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="ExternalData.NWUsers" Member="NWUsers">
+    <Type Name="NWUser">
+      <Column Name="NWUserKey" Type="System.Guid" DbType="UniqueIdentifier NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="SocSecNbrFormatted" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="EntityID" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="LN" Type="System.String" DbType="NVarChar(40)" CanBeNull="true" />
+      <Column Name="FN" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="MN" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="BirthDateStandard" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Gender" Type="System.String" DbType="NVarChar(1)" CanBeNull="true" />
+      <Column Name="SchPerDir" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="EmpType" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="JobTitle" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="UserNameNW" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="EmailLcps" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+      <Column Name="Password" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Year" Type="System.String" DbType="NVarChar(4)" CanBeNull="true" />
+      <Column Name="UserStatus" Type="System.String" DbType="NVarChar(2)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="ExternalData.StaffCandidate" Member="StaffCandidates">
+    <Type Name="StaffCandidate" Id="ID2">
+      <Column Name="MembershipScope" Type="System.Int64" DbType="BigInt" CanBeNull="false" />
+      <Column Name="InternalId" Type="System.String" DbType="NVarChar(12)" CanBeNull="true" />
+      <Column Name="Surname" Type="System.String" DbType="NVarChar(30)" CanBeNull="true" />
+      <Column Name="GivenName" Type="System.String" DbType="NVarChar(20)" CanBeNull="true" />
+      <Column Name="MiddleName" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="DOB" Type="System.DateTime" DbType="DateTime" CanBeNull="false" />
+      <Column Name="Gender" Member="GenderValue" Type="System.String" DbType="VarChar(6) NOT NULL" CanBeNull="false" />
+      <Column Name="Title" Type="System.String" DbType="NVarChar(60)" CanBeNull="true" />
+      <Column Name="UserName" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Email" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+      <Column Name="InitialPassword" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="[Lcps.Ldap].ADSIUser" Member="ADSIUsers">
+    <Type Name="ADSIUser">
+      <Column Name="samAccountName" Type="System.String" DbType="NVarChar(4000)" CanBeNull="true" />
+      <Column Name="displayName" Type="System.String" DbType="NVarChar(4000)" CanBeNull="true" />
+      <Column Name="employeeId" Type="System.String" DbType="NVarChar(4000)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="Ldap.[Ldap-Staff-New]" Member="LdapStaffCandidates">
+    <Type Name="LdapStaffCandidate">
+      <Column Name="Id" Type="System.String" DbType="NVarChar(128) NOT NULL" CanBeNull="false" />
+      <Column Name="InternalId" Type="System.String" DbType="NVarChar(128) NOT NULL" CanBeNull="false" />
+      <Column Name="Surname" Type="System.String" DbType="NVarChar(75) NOT NULL" CanBeNull="false" />
+      <Column Name="GivenName" Type="System.String" DbType="NVarChar(75) NOT NULL" CanBeNull="false" />
+      <Column Name="MiddleName" Type="System.String" DbType="NVarChar(75)" CanBeNull="true" />
+      <Column Name="DOB" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="Gender" Member="GenderValue" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="MembershipScope" Type="System.Int64" DbType="BigInt NOT NULL" CanBeNull="false" />
+      <Column Name="Title" Type="System.String" DbType="NVarChar(256) NOT NULL" CanBeNull="false" />
+      <Column Name="InitialPassword" Type="System.String" DbType="NVarChar(256) NOT NULL" CanBeNull="false" />
+      <Column Name="ConfirmPassword" Type="System.String" DbType="NVarChar(256)" CanBeNull="true" />
+      <Column Name="Email" Type="System.String" DbType="NVarChar(256)" CanBeNull="true" />
+      <Column Name="UserName" Type="System.String" DbType="NVarChar(256) NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="ExternalData.StudentCandidate" Member="StudentCandidates">
+    <Type Name="StudentCandidate" Id="ID3">
+      <Column Name="MembershipScope" Type="System.Int64" DbType="BigInt" CanBeNull="false" />
+      <Column Name="InternalId" Type="System.String" DbType="NVarChar(50)" CanBeNull="false" />
+      <Column Name="Surname" Type="System.String" DbType="NVarChar(40)" CanBeNull="false" />
+      <Column Name="GivenName" Type="System.String" DbType="NVarChar(20)" CanBeNull="false" />
+      <Column Name="MiddleName" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Gender" Member="GenderValue" Type="System.String" DbType="VarChar(6) NOT NULL" CanBeNull="false" />
+      <Column Name="DOB" Type="System.DateTime" DbType="datetime" CanBeNull="false" />
+      <Column Name="UserName" Type="System.String" DbType="NVarChar(50)" CanBeNull="false" />
+      <Column Name="Email" Type="System.String" DbType="NVarChar(255)" CanBeNull="false" />
+      <Column Name="InitialPassword" Type="System.String" DbType="NVarChar(50)" CanBeNull="false" />
+      <Column Name="Title" Type="System.String" DbType="NVarChar(50)" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Function Name="ExternalData.[Personnel-Not-In-NwUsers]" Method="GetPersonnelNotInNWUsers">
+    <ElementType IdRef="ID1" />
+  </Function>
+  <Function Name="ExternalData.[StaffCandidate-Get-No-Asp]" Method="GetSatffCandidatesWithNoAsp">
+    <ElementType IdRef="ID2" />
+  </Function>
+  <Function Name="ExternalData.[Students-No-Asp-Account]" Method="GetStudentsWithNoAsp">
+    <ElementType IdRef="ID3" />
+  </Function>
+</Database>

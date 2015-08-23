@@ -1,0 +1,111 @@
+﻿@using System;
+@using Lcps.Infrastructure;
+@using Lcps.DivisionDirectory.Scopes;
+@using Lcps.UI.Context;
+
+@model long
+
+<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.0/css/bootstrap-toggle.min.css" rel="stylesheet">
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.0/js/bootstrap-toggle.min.js"></script>
+
+<style>
+    .scope-container ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+    }
+
+        .scope-container ul li {
+            margin-bottom: 8px;
+        }
+</style>
+
+<script>
+    $(function () {
+        $('.cb-scope').bootstrapToggle();
+    })
+
+</script>
+
+@{
+    int col = 0;
+    ContextManager _contextManager = new ContextManager();
+    System.Type eType = _contextManager.DirectoryContext.MembershipScopes.ScopeEnumType;
+
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Reserved Scopes
+            </div>
+            <div class="panel-body">
+                @foreach (string rvName in Enum.GetNames(typeof(MembershipScopeReserved)))
+                {
+                    MembershipScopeReserved rv = (MembershipScopeReserved)Enum.Parse(typeof(MembershipScopeReserved), rvName);
+                    long v = (long)rv;
+                    if (v > 0)
+                    {
+                        <input id="cb-@v.ToString()" type="checkbox" class="cb-scope" data-size="mini" data-toggle="toggle" />
+                        @rvName;
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+
+    foreach (string s in System.Enum.GetNames(typeof(MembershipScopeQualifier)))
+    {
+
+        MembershipScopeQualifier q = (MembershipScopeQualifier)System.Enum.Parse(typeof(MembershipScopeQualifier), s);
+
+        if (q != MembershipScopeQualifier.None & q != MembershipScopeQualifier.Reserved)
+        {
+            <div class="col-md-4 scope-item">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        @q.ToString()
+                    </div>
+                    <div class="panel-body scope-container">
+                        <ul>
+                            @{
+
+
+            List<MembershipScope> scopes = _contextManager.DirectoryContext.MembershipScopes.Get(x => x.ScopeQualifier == q).ToList();
+            foreach (MembershipScope scope in scopes.OrderBy(x => x.Caption).ToArray())
+            {
+                Enum sv = (Enum)Enum.ToObject(eType, scope.BinaryValue);
+                Enum mv = (Enum)Enum.ToObject(eType, Model);
+
+                <li>
+                    @if (mv.HasFlag(sv))
+                    {
+                        <input id="cb-@scope.BinaryValue.ToString()" type="checkbox" class="cb-scope" data-size="mini" data-toggle="toggle" checked="checked" />
+                    }
+                    else
+                    {
+                        <input id="cb-@scope.BinaryValue.ToString()" type="checkbox" class="cb-scope" data-size="mini" data-toggle="toggle" />
+                    }
+                    @scope.Caption
+
+                </li>
+            }
+                            }
+                        </ul>
+
+
+
+                    </div>
+                </div>
+            </div>
+            col++;
+            if (col > 2)
+            {
+
+                <div class="row">
+                </div>
+                col = 0;
+            }
+
+        }
+    }
+}

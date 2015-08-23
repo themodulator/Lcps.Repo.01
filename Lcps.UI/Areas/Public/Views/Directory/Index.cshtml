@@ -1,0 +1,90 @@
+﻿@using PagedList;
+@using PagedList.Mvc;
+@using Lcps.DivisionDirectory.Members;
+@using Lcps.DivisionDirectory.Scopes;
+@using Lcps.Infrastructure;
+@using Lcps.UI.Context;
+
+@model PagedList<DirectoryMember>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Page = Request["page"];
+
+    ContextManager cm = new ContextManager();
+}
+
+<div class="body-content">
+
+    <h3>LCPS Directory</h3>
+
+    Total: @ViewBag.Total Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+    @if (@ViewBag.Filter != null)
+    {
+
+
+        long f = (long)ViewBag.Filter;
+        <div class="row container">
+            <strong>Filter:</strong>  @cm.DirectoryContext.MembershipScopes.GetCaptionLabel(f)
+            &nbsp; &nbsp; <a href="@Url.Action("Filter", "Directory", new { area = "Public"})"><i class="fa fa-search"></i> Set Filter</a>
+        </div>
+    }
+
+    @Html.PagedListPager(Model,
+  page => Url.Action("Index", new { page, @filter = @ViewBag.Filter, @theme = ViewBag.Theme, @mc = ViewBag.MemberClass }))
+
+    <div class="table-responsive">
+        <table class="table table-hover table-striped table-condensed lcps-dt">
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.First().Email)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.First().MemberClass)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.First().MembershipScope)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.First().Title)
+                </th>
+
+            </tr>
+
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @DirectoryMemberContext.GetName(item, DirectoryMemberNameFormats.Full | DirectoryMemberNameFormats.Sort)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Email)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.MemberClass)
+                    </td>
+                    <td>@cm.DirectoryContext.MembershipScopes.GetCaptionLabel(item.MembershipScope)</td>
+                    <td>
+                        @if (item.MemberClass == DirectoryMemberClass.Staff)
+                        {
+                            @Html.DisplayFor(modelItem => item.Title)
+                        }
+                        else
+                        {
+                            <span>Student</span>
+                        }
+                    </td>
+                </tr>
+            }
+
+        </table>
+
+
+
+    </div>
+</div>

@@ -1,0 +1,100 @@
+﻿@using Lcps.DivisionDirectory.Ldap;
+@using Lcps.DivisionDirectory.Members;
+@using Lcps.UI.Context;
+
+@model LdapUserConfig
+
+@{
+    ViewBag.Title = "LdapConfig";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ContextManager cm = new ContextManager();
+}
+
+<div class="body-content container">
+    <h2>Ldap User Config</h2>
+
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            Member
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                @Html.LabelFor(model => model.Member.Id, new { @class = "control-label col-md-2" })
+                @Html.DisplayFor(model => model.Member.Id, new { @class = "form-control-static" })
+            </div>
+            <div class="row">
+                @Html.LabelFor(model => model.Member.FullName, new { @class = "control-label col-md-2" })
+                @Html.DisplayFor(model => model.Member.FullName, new { @class = "form-control-static" })
+            </div>
+            <div class="row">
+                @Html.LabelFor(model => model.Member.UserName, new { @class = "control-label col-md-2" })
+                @Html.DisplayFor(model => model.Member.UserName, new { @class = "form-control-static" })
+            </div>
+            <div class="row">
+                @Html.LabelFor(model => model.Member.Email, new { @class = "control-label col-md-2" })
+                @Html.DisplayFor(model => model.Member.Email, new { @class = "form-control-static" })
+            </div>
+            <div class="row">
+                @Html.LabelFor(model => model.Member.MembershipScope, new { @class = "control-label col-md-2" })
+                <label class="form-control-static">
+                    @cm.DirectoryContext.MembershipScopes.GetCaptionLabel(Model.Member.MembershipScope)
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            OU Assignment
+        </div>
+        <div class="panel-body">
+            @Model.OuAssignment.OuDistinguishedName
+        </div>
+    </div>
+
+    @if (Model.GroupConfigs != null)
+    {
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                Group Configurations
+            </div>
+            <div class="panel-body">
+                @foreach (GroupAssignmentConfig cfg in Model.GroupConfigs)
+                {
+                    <strong>@cfg.Caption</strong><br />
+                    <ul class="list-group">
+                        @foreach (GroupAssignment g in cfg.GroupAssignments)
+                        {
+                            <li class="list-group-item">@g.GroupDN</li>
+                        }
+                    </ul>
+                }
+            </div>
+
+        </div>
+    }
+    
+    @if (Model.PersonalFolders != null)
+    {
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                Personal Folders
+            </div>
+            <div class="panel-body">
+                @foreach (PersonalFolder fldr in Model.PersonalFolders)
+                {
+                    string n = Model.Member.UserName;
+                    if (fldr.NameFormat == PersonalFolderIdFormats.Fullname)
+                    {
+                        n = Model.Member.FullSortName + "(" + Model.Member.UserName + ")";
+                    }
+                    
+                    <div>
+                        @Html.Raw(fldr.FolderPath + "\\" + n)
+                    </div>
+                }
+            </div>
+
+        </div>
+    }
+</div>

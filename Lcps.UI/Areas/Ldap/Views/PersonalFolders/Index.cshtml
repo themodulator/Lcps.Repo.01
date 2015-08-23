@@ -1,0 +1,67 @@
+﻿@using Lcps.UI.Context;
+@using Lcps.DivisionDirectory.Ldap;
+@using PagedList;
+@using PagedList.Mvc;
+
+@model PagedList<PersonalFolder>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ContextManager cm = new ContextManager();
+    string scopeStr = Request["scope"];
+    long scope = string.IsNullOrWhiteSpace(scopeStr) ? 0L : Convert.ToInt64(scopeStr);
+}
+
+<script>
+    function edit(id) {
+        var url = "/Ldap/PersonalFolders/Folder?id=" + id;
+        window.location.href = url;
+    }
+</script>
+
+<div class="body-content container">
+
+    <h2>Personal Folder Assignments</h2>
+
+
+    <p>
+        <a href="@Url.Action("Folder", "PersonalFolders", new { area = "Ldap", scope = @scope})" class="btn btn-success"><i class="fa fa-plus"></i> Create New</a>
+    </p>
+
+    @if (Model != null)
+    {
+        Html.PagedListPager(Model, page => Url.Action("Index", new { page }));
+
+        <div class="table-responsive">
+            <table class="table table-hover table-striped table-condensed lcps-dt">
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>@Html.DisplayNameFor(model => model.First().MembershipScope)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().NameFormat)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().FolderPath)</th>
+                </tr>
+                @foreach (PersonalFolder f in Model)
+                {
+                    <tr>
+                        <td>
+                            <a href="@Url.Action("Delete", "PersonalFolders", new {area = "Ldap", id = f.PersonalFolderKey})" class="btn btn-xs btn-danger" onclick="return confirm('Are you sure you want to delete this folder assignment?');"><i class="fa fa-remove"></i></a>
+                            <button type="button" class="btn btn-xs btn-warning" onclick="edit('@f.PersonalFolderKey')"><i class="fa fa-pencil"></i></button>
+                        </td>
+                        <td>
+                            @cm.DirectoryContext.MembershipScopes.GetCaptionLabel(f.MembershipScope)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => f.NameFormat)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => f.FolderPath)
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+
+    }
+
+</div>

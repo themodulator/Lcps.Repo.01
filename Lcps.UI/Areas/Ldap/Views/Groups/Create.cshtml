@@ -1,0 +1,99 @@
+﻿@using Lcps.DivisionDirectory.Ldap;
+@using Lcps.UI.Context;
+
+@model GroupAssignmentConfig
+
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ContextManager cm = new ContextManager();
+    GroupAssignmentConfig cfg = new GroupAssignmentConfig();
+
+    string scopeStr = Request["scope"];
+    long scope = string.IsNullOrWhiteSpace(scopeStr) ? 0L : Convert.ToInt64(scopeStr);
+    
+    string id = Request["id"];
+    string statementMode = "Create";
+    if (id != null)
+    {
+        cfg = cm.LdapContext.GroupAssignmentConfigs.GetByID(new Guid(id));
+        statementMode = "Update";
+    }
+    else
+    {
+        cfg.MembershipScope = scope;
+    }
+}
+
+<script>
+
+    function CreateGroup() {
+        var total = 0;
+
+
+
+        $('.cb-scope').each(
+             function () {
+                 var id = $(this).attr('id');
+                 var val = parseInt(id.replace('cb-', ''));
+                 var ckd = $(this).prop('checked');
+
+                 if (ckd) {
+                     total += val;
+                 }
+             }
+         );
+
+        
+        var o = $('#CaptionTb').val();
+
+        var gid = $('#configId').val();
+
+        $.ajax({
+            type: 'GET',
+            url: '/Ldap/Groups/CreateGroupConfig',
+            data: { id: gid, caption: o, filter: total },
+            success: function (data, success) {
+                if (data.match('^<ul>')) {
+                    $('#errMsg').html(data);
+                    $('#errDiv').toggle('slow');
+                }
+                else {
+                    var url = "/Ldap/Groups/Index?scope=" + total;
+                    window.location.href = url;
+                }
+            },
+            error: function (data, error) {
+                $('#errMsg').html(data);
+                $('#errDiv').toggle('slow');
+            }
+        });
+
+
+    }
+</script>
+
+
+
+
+<div class="body-content container">
+
+    <div class="container">
+        <h2>@statementMode Group Config</h2>
+
+        <div id="errDiv" class="alert alert-danger alert-dismissible" role="alert" style="display: none;">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <div id="errMsg"></div>
+        </div>
+
+        <input type="hidden" id="configId" value="@cfg.GroupAssignmentKey" />
+
+        <div class="form-inline" style="margin-bottom: 24px;">
+            @Html.LabelFor(model => model.Caption, new { @class = "control-label" })
+            <input id="CaptionTb" value="@cfg.Caption" type="text" class="form-control" style="width: 380px;" />
+            <button type="button" class="btn btn-success" onclick="CreateGroup();"><i class="fa fa-plus"></i> @statementMode</button>
+        </div>
+    </div>
+
+    @Html.Partial("~/Areas/Directory/Views/Scopes/_membershipScopeEditor.cshtml", cfg.MembershipScope)
+</div>

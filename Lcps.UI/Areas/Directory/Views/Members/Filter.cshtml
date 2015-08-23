@@ -1,0 +1,80 @@
+﻿@using Lcps.UI.Context
+
+@{
+   
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ContextManager cm = new ContextManager();
+    long filter = (Request.QueryString["filter"] == null) ? 0 : Convert.ToUInt32(Request.QueryString["filter"]);
+    string returnUrl = (Request["returnUrl"] == null) ? "/Directory/Members/Index" : Request["returnUrl"];
+}
+
+<script>
+    function doFilter(url) {
+        var total = 0;
+
+        $('.cb-scope').each(
+             function () {
+                 var id = $(this).attr('id');
+                 var val = parseInt(id.replace('cb-', ''));
+                 var ckd = $(this).prop('checked');
+
+                 if (ckd) {
+                     total += val;
+                 }
+             }
+         );
+
+        if (url == null)
+            url = '/Directory/Members/Index';
+
+        var qry = url + '?filter=' + total;
+
+        var srch = $('#search').val();
+
+        var chkd = $('#mc').prop('checked');
+
+        if (srch != null)
+            qry += "&search=" + srch;
+
+        if (chkd) {
+            var mc = $('#class').val();
+            qry += "&mc=" + mc;
+        }
+
+        window.location.href = qry;
+    }
+
+
+
+</script>
+
+<script>
+    function includeClassFilter()
+    {
+        var mc = $('#mc')
+
+        $('#class').prop('disabled', !mc.prop('checked'));
+
+
+
+    }
+</script>
+
+
+<div class="container body-content">
+    <h2>Member Filter</h2>
+
+    <div style="margin-bottom: 12px;">
+        <div class="col-md-5">
+            <div class=" input-group">
+                <span class="input-group-addon">Search Text</span>
+                <input id="search" type="text" class="form-control" placeholder="Search" name="srch-term">
+            </div>
+        </div>
+        <button type="button" class="btn btn-warning" onclick="doFilter('@returnUrl');">Search</button>
+
+    </div>
+
+@Html.Partial("~/Areas/Directory/Views/Scopes/_membershipScopeEditor.cshtml", filter)
+
+</div> 

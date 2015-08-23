@@ -1,0 +1,80 @@
+﻿@using PagedList;
+@using PagedList.Mvc;
+@using Lcps.DivisionDirectory.Members;
+@using Lcps.DivisionDirectory.Scopes;
+@using Lcps.Infrastructure;
+@using Lcps.UI.Context;
+@using Anvil;
+
+@model PagedList<DirectoryMember>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ViewBag.Page = Request["page"];
+    ContextManager cm = new ContextManager();
+    long f = (long)ViewBag.Filter;
+}
+
+<div class="body-content">
+    <h3>@ViewBag.Header</h3>
+
+    Total: @ViewBag.Total Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+    @if (@ViewBag.Filter != null)
+    {
+        <div class="row container">
+            <strong>Filter:</strong>  @cm.DirectoryContext.MembershipScopes.GetCaptionLabel(f)
+            @Html.Raw("&nbsp; &nbsp;") <a href="@Url.Action("Filter", "Members", new { area = "Directory"})"><i class="fa fa-search"></i> Set Filter</a>
+            <button type="button" class="btn btn-link" onclick="exportMembers(@ViewBag.Filter);">Export</button>
+        </div>
+    }
+
+    @Html.PagedListPager(Model, page => Url.Action(@ViewBag.Action, new { page, @filter = @ViewBag.Filter, @theme = ViewBag.Theme, @mc = ViewBag.MemberClass }))
+
+    <div id="ErrorDiv" class="alert alert-danger alert-dismissible" role="alert" style="display:none;">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <p><strong>Error!</strong> </p>
+        <div id="ErrorMessage"></div>
+    </div>
+
+    
+
+    <script>
+        function deleteMember(id)
+        {
+            if(confirm('Are you sure you want to delete this member?'))
+            {
+                var url = "/Directory/Members/Delete";
+
+                $.ajax({
+                    url: url,
+                    data: { id: id },
+                    success: function (data) {
+                        if (data.startsWith('<ul>'))
+                        {
+                            $("#ErrorMessage").html(data);
+                            $("#ErrorDiv").toggle('slow');
+                        }
+                        else
+                        {
+                            $('#' + id).toggle('slow');
+                        }
+                    },
+                    error: function (req, status, error) {
+                        $("#ErrorMessage").html(req.statusText);
+                        $("#ErrorDiv").toggle('slow');
+                    }
+                });
+            }
+        }
+
+        function exportMembers(f)
+        {
+            var url = '/Directory/Members/Download?filter=' + f;
+            window.location.href = url;
+        }
+    </script>
+
+    @Html.Partial("_directoryMemberList", Model)
+</div>

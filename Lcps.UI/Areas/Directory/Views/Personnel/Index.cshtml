@@ -1,0 +1,44 @@
+﻿@using Lcps.DivisionDirectory.ExternalData;
+@using PagedList;
+@using PagedList.Mvc;
+
+@model PagedList<Personnel>
+
+
+@{
+    ViewBag.Title = "Index";
+    ViewBag.Page = Request["page"];
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+}
+
+<script>
+    function doSearch()
+    {
+        var srch = $('#search').val();
+        var url = "/Directory/Personnel/Index?page=1&search=" + srch;
+        window.location.href = url;
+    }
+</script>
+
+<div class="body-content container">
+
+    <h2>@ViewBag.Header</h2>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class=" input-group">
+                <span class="input-group-addon">Search For</span>
+                <input id="search" type="text" class="form-control" placeholder="Search" name="srch-term" value="@ViewBag.Search">
+                <div class="input-group-btn">
+                    <button type="button" onclick="doSearch();" class="btn btn-success"><i class="fa fa-search"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    Total: @ViewBag.Total Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+    @Html.PagedListPager(Model, page => Url.Action(ViewBag.Action, new { page, @search = @ViewBag.Search }))
+
+    @Html.Partial("_personnelList", Model)
+</div>

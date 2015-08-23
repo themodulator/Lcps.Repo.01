@@ -1,0 +1,45 @@
+﻿@using Lcps.DivisionDirectory.Members;
+@using Lcps.Infrastructure;
+@using Lcps.UI.Context;
+
+@model DirectoryMember
+
+@{
+    ViewBag.Title = "Scope";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+}
+
+
+<script>
+    function updateScope(memberId)
+    {
+        var total = 0;
+
+        $('.cb-scope').each(
+             function () {
+                 var id = $(this).attr('id');
+                 var val = parseInt(id.replace('cb-', ''));
+                 var ckd = $(this).prop('checked');
+
+                 if (ckd) {
+                     total += val;
+                 }
+             }
+         );
+
+        window.location.href = "/Directory/Members/UpdateScope?id=" + memberId + "&s=" + total;
+    }
+</script>
+<div class="body-content container">
+    <h3>@Model.FullSortName</h3>
+    @{
+        ContextManager _contextManager = new ContextManager();
+
+        <strong>Scope:</strong> @_contextManager.DirectoryContext.MembershipScopes.GetCaptionLabel(Model.MembershipScope)
+        <button type="button" onclick="updateScope('@Model.Id');" class="btn btn-success btn-sm" style="margin-left: 24px;"><i class="fa fa-check"></i> Save Changes</button>
+        <a href="@Url.Action("Edit", "Members", new { id = Model.Id } )" class="btn btn-warning btn-sm"><i class="fa fa-ban"></i> Cancel</a>
+        <div class="row" style="margin-top: 12px;">
+            @Html.Partial("~/Areas/Directory/Views/Scopes/_membershipScopeEditor.cshtml", Model.MembershipScope)
+        </div>
+    }
+</div>

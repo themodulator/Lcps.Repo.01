@@ -1,0 +1,72 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Data.SqlClient;
+using System.Collections.Specialized;
+
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using Anvil.DataContext;
+
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.EntityFramework;
+using System.Data.Entity;
+
+using System.Web;
+using System.Xml.Serialization;
+
+
+using Lcps.DivisionDirectory.Scopes;
+
+namespace Lcps.DivisionDirectory.Members
+{
+    public class DirectoryMemberRepository : GenericRepository<DirectoryMember>
+    {
+        #region Constructors
+
+        public DirectoryMemberRepository(DbContext context)
+            :base(context)
+        {
+
+        }
+        
+        #endregion
+
+        #region Get
+
+        
+        #endregion
+
+        #region Insert
+
+        public override void Insert(DirectoryMember entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Delete
+
+        public override void Delete(DirectoryMember entityToDelete)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Delete(object id)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Students
+
+
+        #endregion
+
+   
+    }
+}

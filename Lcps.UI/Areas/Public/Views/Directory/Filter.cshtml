@@ -1,0 +1,72 @@
+﻿@using Lcps.UI.Context
+
+@{
+    ViewBag.Title = "Filter";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ContextManager cm = new ContextManager();
+    long filter = (Request.QueryString["filter"] == null) ? 0 : Convert.ToUInt32(Request.QueryString["filter"]);
+}
+
+<script>
+    function doFilter() {
+        var total = 0;
+
+        $('.cb-scope').each(
+             function () {
+                 var id = $(this).attr('id');
+                 var val = parseInt(id.replace('cb-', ''));
+                 var ckd = $(this).prop('checked');
+
+                 if (ckd) {
+                     total += val;
+                 }
+             }
+         );
+
+        var qry = "/Public/Directory/Index?filter=" + total;
+
+        var srch = $('#search').val();
+
+        var chkd = $('#mc').prop('checked');
+
+        if (srch != null)
+            qry += "&search=" + srch;
+
+        if (chkd) {
+            var mc = $('#class').val();
+            qry += "&mc=" + mc;
+        }
+
+        window.location.href = qry;
+    }
+</script>
+
+
+<div class="container body-content">
+    <h2>Member Filter</h2>
+
+    <div style="margin-bottom: 12px;">
+        <div class="col-md-5">
+            <div class=" input-group">
+                <span class="input-group-addon">Search Text</span>
+                <input id="search" type="text" class="form-control" placeholder="Search" name="srch-term">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-addon">Confine Results To</span>
+                <select id="class" class="form-control" style="width:120px;">
+                    <option value="4">Students</option>
+                    <option value="2">Staff</option>
+                    <option value="0">Inactive</option>
+                </select>
+                <input id="mc" class="cb-scope" type="checkbox" />
+            </div>
+        </div>
+        <button type="button" class="btn btn-warning" onclick="doFilter();">Search</button>
+
+    </div>
+
+@Html.Partial("~/Areas/Directory/Views/Scopes/_membershipScopeEditor.cshtml", filter)
+
+</div> 

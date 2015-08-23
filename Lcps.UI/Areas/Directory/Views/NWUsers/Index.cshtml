@@ -1,0 +1,132 @@
+﻿@using Lcps.DivisionDirectory.ExternalData;
+@using Lcps.DivisionDirectory.Members;
+@using PagedList;
+@using PagedList.Mvc;
+
+@model PagedList<NWUser>
+
+
+@{
+    ViewBag.Title = "Index";
+    ViewBag.Page = Request["page"];
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    DirectoryMemberRepository mbrRepo = new DirectoryMemberRepository(new Lcps.UI.Models.LcpsUiContext());
+    Lcps.UI.Models.LcpsUiContext lcpsDb = new Lcps.UI.Models.LcpsUiContext();
+}
+
+<script>
+    function doSearch(action)
+    {
+        var srch = $('#search').val();
+        var url = "/Directory/NwUsers/" + action + "?page=1&search=" + srch;
+        window.location.href = url;
+    }
+</script>
+
+<div class="body-content container">
+
+    <h2>@ViewBag.Header</h2>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class=" input-group">
+                <span class="input-group-addon">Search For</span>
+                <input id="search" type="text" class="form-control" placeholder="Search" name="srch-term" value="@ViewBag.Search">
+                <div class="input-group-btn">
+                    <button type="button" onclick="doSearch('@ViewBag.Action');" class="btn btn-success"><i class="fa fa-search"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    Total: @ViewBag.Total Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+    @Html.PagedListPager(Model, page => Url.Action(@ViewBag.Action, new { page, @search = @ViewBag.Search }))
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-condensed lcps-dt">
+            <tr>
+                <th>&nbsp;</th>
+                <th>@Html.DisplayNameFor(model => model.First().EntityID)</th>
+                <th>@Html.DisplayNameFor(model => model.First().SocSecNbrFormatted)</th>
+                <th>@Html.DisplayNameFor(model => model.First().LN)</th>
+                <th>@Html.DisplayNameFor(model => model.First().FN)</th>
+                <th>@Html.DisplayNameFor(model => model.First().MN)</th>
+                <th>@Html.DisplayNameFor(model => model.First().BirthDateStandard)</th>
+                <th>@Html.DisplayNameFor(model => model.First().Gender)</th>
+                <th>@Html.DisplayNameFor(model => model.First().SchPerDir)</th>
+                <th>@Html.DisplayNameFor(model => model.First().EmpType)</th>
+                <th>@Html.DisplayNameFor(model => model.First().JobTitle)</th>
+                <th>@Html.DisplayNameFor(model => model.First().UserStatus)</th>
+                <th>@Html.DisplayNameFor(model => model.First().UserNameNW)</th>
+                <th>@Html.DisplayNameFor(model => model.First().EmailLcps)</th>
+                <th>@Html.DisplayNameFor(model => model.First().Year)</th>
+            </tr>
+            @foreach (NWUser n in Model)
+            {
+                <tr>
+                    <td>
+                        @if (ViewBag.Action == "NwStaff")
+                        {
+                            NwUserDirectoryStatus s = n.GetDirectoryStatus(lcpsDb);
+
+                            if (s.HasFlag(NwUserDirectoryStatus.ExistsInDirectory))
+                            {
+                                <a href="@Url.Action("Edit", "Members", new { area = "Directory", id = n.GetDirectoryId(lcpsDb)})" title="This user was found in the directory" class="btn btn-xs btn-success"><i class="fa fa-check"></i></a>
+                            }
+
+                            if (!s.HasFlag(NwUserDirectoryStatus.ExistsInPersonnel))
+                            {
+                                <button type="button" class="btn btn-xs btn-default" disabled title="The user SSN was not found in personnel"><i class="fa fa-plus"></i></button>
+                            }
+
+                            if (s.HasFlag(NwUserDirectoryStatus.ExistsInPersonnel) & !s.HasFlag(NwUserDirectoryStatus.ExistsInDirectory))
+                            {
+                                <a href="@Url.Action("CreateDirectoryMember", "NwUsers", new { area = "Members"})" class="btn btn-info btn-xs" title="Add user to directory"><i class="fa fa-plus"></i></a>
+                            }
+                        }
+                        @if (ViewBag.Action == "NwStudent")
+                        {
+                            NwUserDirectoryStatus s = n.GetDirectoryStatus(lcpsDb);
+
+                            if (s.HasFlag(NwUserDirectoryStatus.ExistsInDirectory))
+                            {
+                                <a href="@Url.Action("Edit", "Members", new { area = "Directory", id = n.GetDirectoryId(lcpsDb)})" title="This user was found in the directory" class="btn btn-xs btn-success"><i class="fa fa-check"></i></a>
+                            }
+
+                            if (!s.HasFlag(NwUserDirectoryStatus.ExistsInDirectory))
+                            {
+                                <a href="@Url.Action("CreateDirectoryMember", "NwUsers", new { area = "Members"})" class="btn btn-info btn-xs" title="Add user to directory"><i class="fa fa-plus"></i></a>
+                            }
+                            
+                            @n.GetDirectoryStatus(new Lcps.UI.Models.LcpsUiContext()).ToString()
+                        }
+                        
+
+                    </td>
+
+
+
+
+
+
+
+                    <td>@Html.DisplayFor(model => n.EntityID)</td>
+                    <td>@Html.DisplayFor(model => n.SocSecNbrFormatted)</td>
+                    <td>@Html.DisplayFor(model => n.LN)</td>
+                    <td>@Html.DisplayFor(model => n.FN)</td>
+                    <td>@Html.DisplayFor(model => n.MN)</td>
+                    <td>@Html.DisplayFor(model => n.BirthDateStandard)</td>
+                    <td>@Html.DisplayFor(model => n.Gender)</td>
+                    <td>@Html.DisplayFor(model => n.SchPerDir)</td>
+                    <td>@Html.DisplayFor(model => n.EmpType)</td>
+                    <td>@Html.DisplayFor(model => n.JobTitle)</td>
+                    <td>@Html.DisplayFor(model => n.UserStatus)</td>
+                    <td>@Html.DisplayFor(model => n.UserNameNW)</td>
+                    <td>@Html.DisplayFor(model => n.EmailLcps)</td>
+                    <td>@Html.DisplayFor(model => n.Year)</td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>

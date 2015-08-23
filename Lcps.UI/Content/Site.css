@@ -1,0 +1,23 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.lcps-dt tr th, .lcps-dt tr td {
+    white-space: nowrap;
+}
+
+
+.lcps-comp-tbl tr th, .lcps-comp-tbl tr td
+{
+    padding-right: 24px;
+    vertical-align: top;
+    text-align: left;
+    white-space: nowrap;
+}

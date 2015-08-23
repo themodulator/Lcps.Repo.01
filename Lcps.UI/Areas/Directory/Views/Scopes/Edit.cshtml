@@ -1,0 +1,80 @@
+﻿@model Lcps.DivisionDirectory.Scopes.MembershipScope
+
+@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+}
+<div class="container body-content">
+    <h2>Edit</h2>
+    <h4>Scope Details</h4>
+
+
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-horizontal">
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            @Html.HiddenFor(model => model.MembershipScopeId)
+            @Html.HiddenFor(model => model.BinaryValue)
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MembershipScopeId, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <label class="form-control-static">@Model.MembershipScopeId</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.BinaryValue, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <label class="form-control-static">@Model.BinaryValue</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.ScopeQualifier, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-2">
+                    @Html.EnumDropDownListFor(model => model.ScopeQualifier, htmlAttributes: new { @class = "form-control" })
+                    @Html.ValidationMessageFor(model => model.ScopeQualifier, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.Caption, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-4">
+                    @Html.EditorFor(model => model.Caption, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.Caption, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.PersonnelCaption, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-4">
+                    @Html.TextBoxFor(model => model.PersonnelCaption, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(model => model.PersonnelCaption, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.NWUserCaption, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-4">
+                    @Html.TextBoxFor(model => model.NWUserCaption, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(model => model.NWUserCaption, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Submit</button>
+                    <a href="@Url.Action("Index", "Scopes", new { area = "Directory" })" class="btn btn-warning"><i class="fa fa-ban"></i> Cancel</a>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

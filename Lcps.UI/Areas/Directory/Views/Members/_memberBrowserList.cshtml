@@ -1,0 +1,34 @@
+﻿@using Lcps.UI.Context;
+@using Lcps.DivisionDirectory.Members;
+
+@{
+    ContextManager cm = new ContextManager();
+    string f = Request["Filter"];
+    long filter = (f == null) ? 0 : Convert.ToInt64(f);
+    string search = Request["search"];
+}
+
+
+<div class="alert alert-info">
+    <span style="margin-right: 24px;">Search: @search</span>
+    @if (filter == 0)
+    {
+        <span class="text-danger">All Members</span>
+    }
+    else
+    {
+        <span class="text-danger">@cm.DirectoryContext.MembershipScopes.GetCaptionLabel(filter)</span>
+    }
+    <p>
+        <a href="@Url.Action("Filter", "Members", new { area = "Directory", returnUrl = Request.ServerVariables["PATH_INFO"] })">Filter</a>
+    </p>
+</div>
+
+<ul class="list-group">
+    @foreach (DirectoryMember m in cm.DirectoryContext.DirectoryMembers.GetByFilter(filter, search))
+    {
+        <li class="list-group-item">
+           <button id="@m.Id" type="button" class="btn btn-xs btn-link" onclick="selectMember('@m.Id');"> <i class="fa fa-square-o"></i> </button> @m.FullSortName <small>(@m.Title)</small>
+        </li>
+    }
+</ul>

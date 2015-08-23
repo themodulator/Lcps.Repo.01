@@ -1,0 +1,152 @@
+﻿@using Lcps.DivisionDirectory.Members;
+@using Lcps.Infrastructure;
+@using PagedList;
+@using PagedList.Mvc;
+
+@model PagedList<DirectoryMember>
+
+<script>
+    function CreateLdap(id)
+    {
+        $("#procDiv").toggle('slow');
+
+        $.ajax({
+            type: 'GET',
+            url: '/Directory/Members/SyncLdapAccount',
+            data: { id: id },
+            success: function (data, success) {
+                if (data.match('^<ul>')) {
+                    $('#errMsg').html(data);
+                    $('#errDiv').toggle('slow');
+                }
+                else {
+                    var url = "/Directory/Members/GetNewLdap";
+                    window.location.href = url;
+                }
+                $("#procDiv").toggle('slow');
+            },
+            error: function (data, error) {
+                $('#errMsg').html(data);
+                $('#errDiv').toggle('slow');
+                $("#procDiv").toggle('slow');
+            }
+        });
+    }
+</script>
+
+<div id="errDiv" class="alert alert-danger alert-dismissible" role="alert" style="display: none;">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <div id="errMsg"></div>
+</div>
+
+<div id="procDiv" class="alert alert-success" style="width: 400px; margin-left:auto; margin-right: auto; display: none;">
+    <table>
+        <tr>
+            <td style="padding-right: 24px;"><img src="~/Content/images/ajax-loader.gif" /></td>
+            <td><label class="form-control-static">Processing...</label></td>
+        </tr>
+    </table>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover table-striped table-condensed lcps-dt">
+        <tr>
+            <th>
+                @if (ViewBag.Action == "Index")
+                {
+                    <a href="@Url.Action("Create", "Members", new { area = "Directory"})" class="btn btn-success btn-sm"><i class="fa fa-plus"></i> New</a>
+                }
+
+                @if (ViewBag.Action == "StaffCandidates")
+                {
+                    <a href="@Url.Action("CreateNewStaff", "Members", new { area = "Directory" })" class="btn btn-success btn-sm"><i class="fa fa-plus"></i> Create All</a>
+                }
+                
+            </th>
+            <th>
+                Name
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.First().Email)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.First().UserName)
+            </th>
+            
+                @if (ViewBag.Action == "StaffCandidates")
+                {
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().InitialPassword)
+                    </th>
+                }
+                    
+            <th>
+                @Html.DisplayNameFor(model => model.First().DOB)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.First().Gender)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.First().MembershipScope)
+            </th>
+
+        </tr>
+
+        @foreach (var item in Model)
+        {
+            <tr id="@item.Id">
+                <td>
+                    @if (ViewBag.Action == "Index")
+                    {
+                        <a href="@Url.Action("Edit", "Members", new { area = "Directory", id = item.Id })" class="btn btn-xs btn-warning" title="Edit Details"><i class="fa fa-pencil"></i></a>
+                        <a href="#" onclick="deleteMember('@item.Id');" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i></a>
+                    }
+                    <a href="@Url.Action("Index", "UserSync", new { area = "Ldap", id = item.Id })" class="btn btn-xs btn-info" title="View Ldap Config"><i class="fa fa-eye"></i></a>
+                    @if (ViewBag.Action == "StaffCandidates")
+                    {
+                        <a href="@Url.Action("CreateNewStaffMember", "Members", new { area = "Directory", id = item.InternalId })" class="btn btn-xs btn-success" title="Edit Details"><i class="fa fa-plus"></i></a>
+                    }
+                    @if (ViewBag.Action == "GetNewLdap")
+                    {
+                        <button type="button" class="btn btn-xs btn-warning" title="Create LDAP Account" onclick="CreateLdap('@item.Id')"><i class="fa fa-recycle"></i></button>
+                    }
+
+                </td>
+
+                <td>
+                    @Lcps.DivisionDirectory.Members.DirectoryMemberRepository.GetName(item, DirectoryMemberNameFormats.Full | DirectoryMemberNameFormats.Sort)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Email)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.UserName)
+                </td>
+                
+                    @if (ViewBag.Action == "StaffCandidates")
+                    {
+                        <td>
+                            @Html.DisplayFor(model => item.InitialPassword)
+                        </td>
+                    }
+
+
+                        
+                <td>
+                    @Html.DisplayFor(modelItem => item.DOB)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Gender)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Title)<br />
+                    @item.ScopeCaption(new Lcps.UI.Models.LcpsUiContext())
+                </td>
+            </tr>
+        }
+
+    </table>
+
+
+
+</div>

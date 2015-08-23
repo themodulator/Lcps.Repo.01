@@ -1,0 +1,167 @@
+﻿@using Lcps.DivisionDirectory.ExternalData;
+@using PagedList;
+@using PagedList.Mvc;
+@using Lcps.UI.Context;
+
+@model PagedList<StudentCandidate>
+
+
+@{
+    ViewBag.Title = "Index";
+    ViewBag.Page = Request["page"];
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+    ContextManager cm = new ContextManager();
+}
+
+<script>
+    function doSearch()
+    {
+        var srch = $('#search').val();
+        var url = "/Directory/NwUsers/Students?page=1&search=" + srch;
+        window.location.href = url;
+    }
+
+    function createAspAccounts()
+    {
+        process('/Directory/NwUsers/CreateStudentAsp', null, null, function () {
+            refresh();
+        })
+    }
+
+    function refresh() {
+        var srch = $('#search').val();
+
+        var url = "/Directory/NwUsers/Students?page=1&search=" + srch;
+
+        window.location.href = url;
+    }
+
+    function process(url, message, data, callback) {
+        $('#progressModal').modal('show');
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            data: data,
+            success: function (data, success) {
+                $('#progressModal').modal('hide');
+                if (data.match('^<ul>')) {
+                    $('#errMsg').html(data);
+                    $('#errDiv').toggle('slow');
+                }
+                else {
+                    callback();
+                }
+
+
+            },
+            error: function (data, error) {
+                $('#progressModal').modal('hide');
+                $('#errMsg').html(data);
+                $('#errDiv').toggle('slow');
+
+            }
+        });
+    }
+</script>
+
+
+<div id="progressModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Processing</h4>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <tr>
+                        <td style="padding-right:24px;">
+                            <img src="~/Content/images/ajax-loader.gif" />
+                        </td>
+                        <td>
+                            <p id="statusMessage">Processing...</p>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<div class="body-content container">
+
+    <h2>@ViewBag.Header</h2>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class=" input-group">
+                <span class="input-group-addon">Search For</span>
+                <input id="search" type="text" class="form-control" placeholder="Search" name="srch-term" value="@ViewBag.Search">
+                <div class="input-group-btn">
+                    <button type="button" onclick="doSearch();" class="btn btn-success"><i class="fa fa-search"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            @if (ViewBag.Action == "StudentsNoAsp")
+            {
+                <button type="button" class="btn btn-warning" onclick="createAspAccounts();"><i class="fa fa-plus-square-o"></i> &nbsp;Create ASP Accounts</button>
+            }
+        </div>
+    </div>
+
+    Total: @ViewBag.Total Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+    @Html.PagedListPager(Model, page => Url.Action(ViewBag.Header, new { page, @search = @ViewBag.Search }))
+
+    <div id="errDiv" class="alert alert-danger alert-dismissible" role="alert" style="display: none; width: 800px; margin-left: auto; margin-right: auto;">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <strong>Error!</strong> <br />
+        <div id="errMsg">
+
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-condensed lcps-dt">
+            <tr>
+                    <th>&nbsp;</th>
+                <th>@Html.DisplayNameFor(model => model.First().InternalId)</th>
+                <th>@Html.DisplayNameFor(model => model.First().Surname)</th>
+                <th>@Html.DisplayNameFor(model => model.First().GivenName)</th>
+                <th>@Html.DisplayNameFor(model => model.First().MiddleName)</th>
+                <th>@Html.DisplayNameFor(model => model.First().DOB)</th>
+                <th>@Html.DisplayNameFor(model => model.First().Gender)</th>
+                <th>@Html.DisplayNameFor(model => model.First().MembershipScope)</th>
+                <th>@Html.DisplayNameFor(model => model.First().Title)</th>
+                <th>@Html.DisplayNameFor(model => model.First().UserName)</th>
+                
+                <th>@Html.DisplayNameFor(model => model.First().Email)</th>
+            </tr>
+            @foreach (StudentCandidate n in Model)
+            {
+                <tr>
+                    <td></td>
+                    <td>@Html.DisplayFor(model => n.InternalId)</td>
+                    <td>@Html.DisplayFor(model => n.Surname)</td>
+                    <td>@Html.DisplayFor(model => n.GivenName)</td>
+                    <td>@Html.DisplayFor(model => n.MiddleName)</td>
+                    <td>@Html.DisplayFor(model => n.DOB)</td>
+                    <td>@Html.DisplayFor(model => n.Gender)</td>
+                    <td>@cm.DirectoryContext.MembershipScopes.GetCaptionLabel(n.MembershipScope)</td>
+                    <td>@Html.DisplayFor(model => n.Title)</td>
+                    <td>@Html.DisplayFor(model => n.UserName)</td>
+                    <td>@Html.DisplayFor(model => n.Email)</td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>

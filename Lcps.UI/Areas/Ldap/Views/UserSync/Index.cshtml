@@ -1,0 +1,246 @@
+﻿@using Lcps.DivisionDirectory.Ldap;
+@using Lcps.DivisionDirectory.Members;
+@using Lcps.UI.Context;
+@using System.DirectoryServices;
+@using System.DirectoryServices.AccountManagement;
+@using System.IO;
+
+
+
+@model LdapUserConfig
+
+@{
+    ContextManager cm = new ContextManager();
+}
+
+<script>
+    function syncGroups(id) {
+        process('/Ldap/UserSync/SyncGroups', 'Syncing group memberships', { id: id },
+            function () {
+                refresh(id);
+            }
+            );
+    }
+
+    function refresh(id) {
+        window.location.href = '/Ldap/UserSync/Index?id=' + id;
+    }
+
+    function process(url, message, data, callback) {
+        $('#progressModal').modal('show');
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            data: data,
+            success: function (data, success) {
+                if (success.match('^<ul>')) {
+                    $('#progressModal').modal('hide');
+                    $('#errMsg').html(data);
+                    $('#errModal').modal('show');
+                }
+                else {
+                    $('#progressModal').modal('hide');
+                    callback();
+                }
+
+
+            },
+            error: function (data, error) {
+                $('#progressModal').modal('hide');
+                $('#errMsg').html(error);
+                $('#errModal').modal('show');
+
+            }
+        });
+    }
+</script>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Directory/Views/Shared/_directoryLayout.cshtml";
+}
+
+<div id="progressModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Processing</h4>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <tr>
+                        <td style="padding-right:24px;">
+                            <img src="~/Content/images/ajax-loader.gif" />
+                        </td>
+                        <td>
+                            <p id="statusMessage">Processing...</p>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="errModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Error</h4>
+            </div>
+            <div class="modal-body">
+                <div id="errmsg" class="alert alert-danger">
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="body-content container">
+    <h3>LDAP Details</h3>
+
+    @if (Model.ExistsInLdap)
+    {
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                User Details
+            </div>
+            <div class="panel-body">
+                <table class="lcps-comp-tbl">
+                    <tr>
+                        <th>Source</th>
+                        <th>Directory</th>
+                        <th>LDAP</th>
+                    </tr>
+                    <tr>
+                        <th>Last Name</th>
+                        <td>@Model.Member.Surname</td>
+                        <td>@Model.LdapUser.Surname</td>
+                    </tr>
+                    <tr>
+                        <th>Middle Name</th>
+                        <td>@Model.Member.MiddleName</td>
+                        <td>@Model.LdapUser.MiddleName</td>
+                    </tr>
+                    <tr>
+                        <th>First Name</th>
+                        <td>@Model.Member.GivenName</td>
+                        <td>@Model.LdapUser.GivenName</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                OU Membership
+            </div>
+            <div class="panel-body">
+                <table class="lcps-comp-tbl">
+                    <tr>
+                        <th>Current</th>
+                        <th>Intended</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            @(((DirectoryEntry)Model.LdapUser.GetUnderlyingObject()).Parent.InvokeGet("distinguishedName").ToString())
+                        </td>
+                        <td>
+                            @Model.OuAssignment.OuDistinguishedName
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                Groups
+            </div>
+
+            <div class="panel-body">
+                <p><button type="button" class="btn btn-info btn-xs" onclick="syncGroups('@Model.Member.Id');"><i class="fa fa-refresh"></i> Sync</button></p>
+                <table class="lcps-comp-tbl">
+                    <tr>
+                        <th>Current</th>
+                        <th>Intended</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            @foreach (GroupPrincipal grp in Model.LdapUser.GetGroups().OrderBy(x => x.DistinguishedName))
+                            {
+                                if (!grp.Name.ToLower().Equals("domain users"))
+                                {
+                                    <div>@( (new DirectoryEntry("LDAP://" + grp.DistinguishedName).InvokeGet("samAccountName").ToString()))</div>
+                                }
+                            }
+                        </td>
+                        <td>
+                            @foreach (GroupAssignment g in Model.GroupAssignments.OrderBy(x => x.GroupDN))
+                            {
+                                <div>@( (new DirectoryEntry("LDAP://" + g.GroupDN).InvokeGet("samAccountName").ToString()))</div>
+                            }
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                Personal Folders
+            </div>
+            <div class="panel-body">
+                <table class="lcps-comp-tbl">
+                    <tr>
+                        <th>Folder</th>
+                        <th>&nbsp;</th>
+                    </tr>
+                    @foreach (PersonalFolder f in Model.PersonalFolders)
+                    {
+                        {
+                            string name = DirectoryMemberRepository.GetName(Model.Member, DirectoryMemberNameFormats.Short | DirectoryMemberNameFormats.Sort);
+
+                            DirectoryInfo dr = new DirectoryInfo(f.FolderPath);
+                            foreach (DirectoryInfo pf in dr.GetDirectories()
+                                .Where(x => x.Name.StartsWith(name)
+                                    | x.Name.StartsWith(Model.Member.UserName)))
+                            {
+                                <tr>
+                                    <td>
+                                        @pf.FullName
+
+                                    </td>
+                                    <td>&nbsp;</td>
+                                </tr>
+
+                            }
+                        }
+                    }
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            This use was not found in your LDAP domain
+        </div>
+    }
+</div>
+
